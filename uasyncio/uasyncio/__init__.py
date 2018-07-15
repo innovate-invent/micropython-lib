@@ -209,7 +209,9 @@ def open_connection(host, port):
     return StreamReader(s), StreamWriter(s, {})
 
 
-def start_server(client_coro, host, port, backlog=10):
+def start_server(client_coro, host, port, backlog=10, ssl=None):
+    if ssl is not None:
+        import ussl
     if DEBUG and __debug__:
         log.debug("start_server(%s, %s)", host, port)
     s = _socket.socket()
@@ -231,6 +233,9 @@ def start_server(client_coro, host, port, backlog=10):
         if DEBUG and __debug__:
             log.debug("start_server: After accept: %s", s2)
         extra = {"peername": client_addr}
+        if ssl is not None:
+            ssl['server_side'] = ssl.get('server_side', True) # Set to server side if not specified
+            s2 = ussl.wrap_socket(s2, **ssl)
         yield client_coro(StreamReader(s2), StreamWriter(s2, extra))
 
 
