@@ -130,7 +130,11 @@ class StreamReader:
         while True:
             yield IORead(self.polls)
             res = self.ios.readline()
-            assert res is not None
+            if res is None:
+                continue
+            # This should not happen for real sockets, but can easily
+            # happen for stream wrappers (ssl, websockets, etc.)
+            #log.warn("Empty read")
             if not res:
                 yield IOReadDone(self.polls)
                 break
